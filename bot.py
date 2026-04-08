@@ -13,7 +13,6 @@ import logging
 
 import discord
 from discord import app_commands
-from discord.ext import commands
 
 import config
 import conoha_api
@@ -28,8 +27,8 @@ logger = logging.getLogger(__name__)
 # ---- Discord クライアント設定 -----------------------------------------------
 
 intents = discord.Intents.default()
-bot = commands.Bot(command_prefix="!", intents=intents)
-tree = bot.tree
+client = discord.Client(intents=intents)
+tree = app_commands.CommandTree(client)
 
 # 自動停止モニター（インスタンスは1つだけ）
 _monitor: AutoStopMonitor | None = None
@@ -37,17 +36,12 @@ _monitor: AutoStopMonitor | None = None
 
 # ---- ユーティリティ ----------------------------------------------------------
 
-def _has_admin_role(interaction: discord.Interaction) -> bool:
-    if not isinstance(interaction.user, discord.Member):
-        return False
-    return any(r.name == config.ADMIN_ROLE_NAME for r in interaction.user.roles)
-
 
 async def _notify_channel(message: str) -> None:
     """設定済みチャンネルに通知を送る。"""
     if not config.DISCORD_CHANNEL_ID:
         return
-    channel = bot.get_channel(config.DISCORD_CHANNEL_ID)
+    channel = client.get_channel(config.DISCORD_CHANNEL_ID)
     if channel and isinstance(channel, discord.TextChannel):
         await channel.send(message)
 
@@ -135,14 +129,8 @@ async def cmd_start(interaction: discord.Interaction) -> None:
     asyncio.create_task(_wait_and_notify())
 
 
-@tree.command(name="stop", description="Minecraftサーバーを停止します（Adminロール必須）")
+@tree.command(name="stop", description="Minecraftサーバーを停止します")
 async def cmd_stop(interaction: discord.Interaction) -> None:
-    if not _has_admin_role(interaction):
-        await interaction.response.send_message(
-            f"`/stop` は **{config.ADMIN_ROLE_NAME}** ロールのみ使用できます。", ephemeral=True
-        )
-        return
-
     await interaction.response.defer(thinking=True)
 
     try:
@@ -178,14 +166,8 @@ async def cmd_stop(interaction: discord.Interaction) -> None:
     asyncio.create_task(_wait_and_notify())
 
 
-@tree.command(name="restart", description="Minecraftサーバーを再起動します（Adminロール必須）")
+@tree.command(name="restart", description="Minecraftサーバーを再起動します")
 async def cmd_restart(interaction: discord.Interaction) -> None:
-    if not _has_admin_role(interaction):
-        await interaction.response.send_message(
-            f"`/restart` は **{config.ADMIN_ROLE_NAME}** ロールのみ使用できます。", ephemeral=True
-        )
-        return
-
     await interaction.response.defer(thinking=True)
 
     # 停止フェーズ
@@ -231,10 +213,10 @@ async def cmd_restart(interaction: discord.Interaction) -> None:
 
 # ---- Bot イベント ------------------------------------------------------------
 
-@bot.event
+@client.event
 async def on_ready() -> None:
     await tree.sync()
-    logger.info("Bot 起動完了: %s (ID: %s)", bot.user, bot.user.id)
+    logger.info("Bot 起動完了: %s (ID: %s)", client.user, client.user.id)
     logger.info("スラッシュコマンドを同期しました。")
 
     # Bot 起動時にサーバーがすでに ACTIVE なら自動停止モニターを開始
@@ -250,4 +232,4 @@ async def on_ready() -> None:
 # ---- エントリーポイント -------------------------------------------------------
 
 if __name__ == "__main__":
-    bot.run(config.DISCORD_TOKEN)
+    client.run(config.DISCORD_TOKEN)
