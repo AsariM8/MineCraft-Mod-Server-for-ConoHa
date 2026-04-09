@@ -7,15 +7,16 @@ DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 CONOHA_USERNAME = os.getenv("CONOHA_USERNAME")
 CONOHA_PASSWORD = os.getenv("CONOHA_PASSWORD")
 TENANT_ID = os.getenv("TENANT_ID")
+CONOHA_TENANT_NAME = os.getenv("CONOHA_TENANT_NAME", "")
 SERVER_ID = os.getenv("SERVER_ID")
 DISCORD_CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID", "0"))
 MC_SERVER_HOST = os.getenv("MC_SERVER_HOST", "")
 MC_SERVER_PORT = int(os.getenv("MC_SERVER_PORT", "25565"))
 AUTO_STOP_MINUTES = int(os.getenv("AUTO_STOP_MINUTES", "10"))
 
-CONOHA_REGION = os.getenv("CONOHA_REGION", "tyo1")
-CONOHA_IDENTITY_URL = f"https://identity.{CONOHA_REGION}.conoha.io/v2.0"
-CONOHA_COMPUTE_BASE = f"https://compute.{CONOHA_REGION}.conoha.io/v2/{TENANT_ID}"
+CONOHA_REGION = os.getenv("CONOHA_REGION", "c3j1")
+CONOHA_IDENTITY_URL = f"https://identity.{CONOHA_REGION}.conoha.io/v3"
+CONOHA_COMPUTE_BASE = f"https://compute.{CONOHA_REGION}.conoha.io/v2.1"
 
 missing = [
     name for name, val in [
@@ -23,6 +24,7 @@ missing = [
         ("CONOHA_USERNAME", CONOHA_USERNAME),
         ("CONOHA_PASSWORD", CONOHA_PASSWORD),
         ("TENANT_ID", TENANT_ID),
+        ("CONOHA_TENANT_NAME", CONOHA_TENANT_NAME),
         ("SERVER_ID", SERVER_ID),
     ]
     if not val

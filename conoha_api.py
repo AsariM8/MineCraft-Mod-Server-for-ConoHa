@@ -7,28 +7,36 @@ _token_expires: float = 0.0
 
 
 def _get_token() -> str:
-    """ConoHa APIトークンを取得・キャッシュして返す。"""
+    """ConoHa APIトークンを取得・キャッシュして返す（Keystone v3）。"""
     global _token, _token_expires
     now = time.time()
     if _token and now < _token_expires:
         return _token
 
-    url = f"{config.CONOHA_IDENTITY_URL}/tokens"
+    url = f"{config.CONOHA_IDENTITY_URL}/auth/tokens"
+    # ConoHa 公式ドキュメント準拠フォーマット（domain 指定なし、project.name でスコープ）
     payload = {
         "auth": {
-            "passwordCredentials": {
-                "username": config.CONOHA_USERNAME,
-                "password": config.CONOHA_PASSWORD,
+            "identity": {
+                "methods": ["password"],
+                "password": {
+                    "user": {
+                        "name": config.CONOHA_USERNAME,
+                        "password": config.CONOHA_PASSWORD,
+                    }
+                },
             },
-            "tenantId": config.TENANT_ID,
+            "scope": {
+                "project": {"name": config.CONOHA_TENANT_NAME}
+            },
         }
     }
     resp = requests.post(url, json=payload, timeout=15)
     resp.raise_for_status()
-    data = resp.json()
 
-    _token = data["access"]["token"]["id"]
-    # ConoHa トークン有効期限は24h。安全マージンとして23h後に再取得
+    # v3 ではトークンはレスポンスヘッダー X-Subject-Token に入っている
+    _token = resp.headers["X-Subject-Token"]
+    # トークン有効期限は24h。安全マージンとして23h後に再取得
     _token_expires = now + 23 * 3600
     return _token
 
