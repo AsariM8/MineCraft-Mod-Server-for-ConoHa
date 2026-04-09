@@ -74,6 +74,21 @@ async def _auto_stop_handler() -> None:
 
 # ---- スラッシュコマンド -------------------------------------------------------
 
+@tree.command(name="readme", description="コマンド一覧と説明を表示します")
+async def cmd_readme(interaction: discord.Interaction) -> None:
+    embed = discord.Embed(
+        title="コマンド一覧",
+        description="Minecraftサーバーを管理するコマンドの一覧です。",
+        color=discord.Color.green(),
+    )
+    embed.add_field(name="/status", value="サーバーの現在の状態を確認します。\n`起動中 (ACTIVE)` / `停止中 (SHUTOFF)` / `起動処理中 (BUILD)` を表示します。", inline=False)
+    embed.add_field(name="/start", value="サーバーを起動します。\n起動完了後に通知します。", inline=False)
+    embed.add_field(name="/stop", value="サーバーを停止します。\n停止完了後に通知します。", inline=False)
+    embed.add_field(name="/restart", value="サーバーを再起動します。\n停止 → 起動の順に実行し、完了後に通知します。", inline=False)
+    embed.add_field(name="/readme", value="このコマンド一覧を表示します。", inline=False)
+    await interaction.response.send_message(embed=embed)
+
+
 @tree.command(name="status", description="Minecraftサーバーの現在の状態を確認します")
 async def cmd_status(interaction: discord.Interaction) -> None:
     await interaction.response.defer(thinking=True)
